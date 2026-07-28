@@ -7,7 +7,7 @@
  */
 
 var SHEET_NAME = 'Entries';
-var HEADERS = ['Timestamp', 'Name', 'Business', 'Email', 'Entry #', 'Total Entries'];
+var HEADERS = ['Timestamp', 'Name', 'Business', 'Email', 'Entry #', 'Total Entries', 'Marketing Opt-in'];
 
 function getSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -26,6 +26,7 @@ function doPost(e) {
     var timestamp = data.timestamp || new Date().toISOString();
     var total = Math.floor(Number(data.totalEntries)) || 1;
     total = Math.max(1, Math.min(total, 25)); // sanity bound against malformed requests
+    var marketingOptIn = data.marketingOptIn === true ? 'Yes' : 'No';
 
     if (!name || !email) {
       return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'missing name/email' }))
@@ -35,7 +36,7 @@ function doPost(e) {
     var sheet = getSheet_();
     var rows = [];
     for (var i = 1; i <= total; i++) {
-      rows.push([timestamp, name, business, email, i, total]);
+      rows.push([timestamp, name, business, email, i, total, marketingOptIn]);
     }
     sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
 
