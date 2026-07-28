@@ -7,7 +7,7 @@
  */
 
 var SHEET_NAME = 'Entries';
-var HEADERS = ['Timestamp', 'Name', 'Business', 'Email', 'Entry #', 'Total Entries', 'Marketing Opt-in'];
+var HEADERS = ['Timestamp', 'Name', 'Business', 'Email', 'Entries', 'Marketing Opt-in'];
 
 function getSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -18,6 +18,17 @@ function getSheet_() {
 }
 
 function doPost(e) {
+  // Concurrent submissions (multiple phones scanning the QR at once) can
+  // otherwise both read the same "last row" and overwrite each other.
+  // Serialize the whole read-then-write so every submission gets its own row.
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'busy, try again' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   try {
     var data = JSON.parse(e.postData.contents);
     var name = String(data.name || '').trim();
@@ -34,17 +45,15 @@ function doPost(e) {
     }
 
     var sheet = getSheet_();
-    var rows = [];
-    for (var i = 1; i <= total; i++) {
-      rows.push([timestamp, name, business, email, i, total, marketingOptIn]);
-    }
-    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+    sheet.appendRow([timestamp, name, business, email, total, marketingOptIn]);
 
-    return ContentService.createTextOutput(JSON.stringify({ ok: true, rows: rows.length }))
+    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
 }
 
