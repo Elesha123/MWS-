@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ads Analyst — Google Ads Account Intelligence</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131722; --panel2:#1a2030; --border:#26304a;
+    --text:#e7ebf3; --muted:#93a0bd; --accent:#4f8cff; --accent2:#7bd88f;
+    --high:#ff5d6c; --med:#ffb454; --low:#4f8cff; --info:#93a0bd;
+    --good:#3ecf8e;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f4f6fb; --panel:#ffffff; --panel2:#eef1f8; --border:#dbe1ee;
+      --text:#1a2233; --muted:#5b6883; --accent:#2f6fed; --accent2:#1f9d55;
+      --high:#d8323f; --med:#b8710b; --low:#2f6fed; --info:#5b6883;
+      --good:#1f9d55;
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{overflow-x:hidden;}
+  a{color:var(--accent);}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 80px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  header.top h1{font-size:20px;margin:0;display:flex;align-items:center;gap:10px;}
+  header.top h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb, var(--good) 20%, transparent);}
+  header.top .tagline{color:var(--muted);font-size:13px;margin-top:2px;}
+  .privacy-badge{font-size:12px;color:var(--good);border:1px solid color-mix(in srgb, var(--good) 40%, transparent);
+    background:color-mix(in srgb, var(--good) 10%, transparent);padding:5px 10px;border-radius:20px;white-space:nowrap;}
+
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+  @media (max-width:920px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 12px;}
+  .card h3{font-size:16px;margin:0 0 8px;}
+
+  #dropzone{border:2px dashed var(--border);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;
+    transition:border-color .15s, background .15s;color:var(--muted);}
+  #dropzone.hover{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 8%, transparent);}
+  #dropzone strong{color:var(--text);}
+  #dropzone .hint{font-size:12px;margin-top:6px;}
+  #fileInput{display:none;}
+
+  .upload-list{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .upload-item{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:13px;}
+  .upload-item .row1{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .upload-item .fname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;}
+  .upload-item .meta{color:var(--muted);font-size:11.5px;margin-top:3px;}
+  .upload-item .type-badge{font-size:10.5px;padding:2px 7px;border-radius:20px;background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);white-space:nowrap;}
+  .upload-item .type-badge.unknown{background:color-mix(in srgb, var(--muted) 20%, transparent);color:var(--muted);}
+  .upload-item button.rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;}
+  .upload-item button.rm:hover{color:var(--high);}
+
+  .context-field{margin-bottom:10px;}
+  .context-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+  .context-field input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:8px 10px;font-size:13px;}
+
+  .goal-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .chip{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:7px 13px;
+    font-size:12.5px;cursor:pointer;transition:border-color .15s, background .15s;}
+  .chip:hover{border-color:var(--accent);}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .ask-row{display:flex;gap:8px;}
+  .ask-row input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:11px 12px;font-size:14px;}
+  .ask-row button{background:var(--accent);border:none;color:#fff;border-radius:8px;padding:0 18px;font-size:14px;
+    font-weight:600;cursor:pointer;}
+  .ask-row button:hover{filter:brightness(1.08);}
+  .suggest-row{margin-top:10px;font-size:12.5px;color:var(--muted);display:none;}
+  .suggest-row .chip{padding:5px 11px;}
+
+  .btn-secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;
+    padding:9px 14px;font-size:13px;cursor:pointer;font-weight:600;}
+  .btn-secondary:hover{border-color:var(--accent);}
+
+  .empty-state{color:var(--muted);font-size:14px;text-align:center;padding:40px 20px;}
+  .empty-state .big{font-size:34px;margin-bottom:10px;}
+
+  .snapshot-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:4px;}
+  .kpi{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+  .kpi .val{font-size:19px;font-weight:700;}
+  .kpi .lbl{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.03em;}
+
+  .missing-box{background:color-mix(in srgb, var(--med) 12%, transparent);border:1px solid color-mix(in srgb, var(--med) 45%, transparent);
+    border-radius:10px;padding:14px 16px;font-size:13.5px;line-height:1.55;}
+  .missing-box b{color:var(--med);}
+  .missing-box ul{margin:8px 0 0;padding-left:18px;}
+  .missing-box code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px;}
+
+  .result-headline{font-size:17px;font-weight:600;line-height:1.5;margin-bottom:14px;}
+  .finding{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--panel2);}
+  .finding.high{border-left:4px solid var(--high);}
+  .finding.medium{border-left:4px solid var(--med);}
+  .finding.low{border-left:4px solid var(--low);}
+  .finding.info{border-left:4px solid var(--info);}
+  .finding .sev{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px;}
+  .finding.high .sev{color:var(--high);}
+  .finding.medium .sev{color:var(--med);}
+  .finding.low .sev{color:var(--low);}
+  .finding.info .sev{color:var(--info);}
+  .finding .ftitle{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .finding .fdetail{font-size:13.5px;color:var(--text);line-height:1.55;margin-bottom:8px;}
+  .finding .recs{font-size:13px;margin-top:8px;background:var(--panel);border-radius:8px;padding:10px 12px;}
+  .finding .recs b{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);display:block;margin-bottom:5px;}
+  .finding .recs ul{margin:0;padding-left:18px;}
+  .finding .recs li{margin-bottom:3px;}
+
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  table.data th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border);
+    white-space:nowrap;position:sticky;top:0;background:var(--panel2);}
+  table.data td{padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  table.data tr:last-child td{border-bottom:none;}
+  .table-scroll{max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px;}
+  .table-actions{display:flex;justify-content:flex-end;margin-top:6px;}
+  .table-actions button{font-size:11.5px;background:none;border:1px solid var(--border);color:var(--muted);
+    border-radius:6px;padding:4px 9px;cursor:pointer;}
+  .table-actions button:hover{color:var(--text);border-color:var(--accent);}
+
+  .sources-line{font-size:11.5px;color:var(--muted);margin-top:14px;}
+
+  .more-available{margin-top:6px;font-size:13px;color:var(--muted);}
+  .more-available details{margin-top:8px;}
+  .more-available summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px;}
+  .more-available .req-item{padding:8px 0;border-bottom:1px solid var(--border);}
+  .more-available .req-item:last-child{border-bottom:none;}
+
+  .help-toggle{font-size:12px;color:var(--accent);cursor:pointer;margin-top:10px;display:inline-block;}
+  .help-panel{display:none;margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--panel2);
+    border-radius:8px;padding:12px 14px;}
+  .help-panel.open{display:block;}
+  .help-panel dt{color:var(--text);font-weight:600;margin-top:8px;}
+  .help-panel dt:first-child{margin-top:0;}
+  .help-panel dd{margin:2px 0 0;}
+
+  footer.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1><span class="dot"></span> Ads Analyst</h1>
+      <div class="tagline">Drop in your Google Ads reports. Tell it your goal. Get an expert-level answer, not a dashboard.</div>
+    </div>
+    <div class="privacy-badge">🔒 Runs entirely in your browser — nothing is uploaded anywhere</div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="card">
+        <h2>1 — Drop in reports</h2>
+        <div id="dropzone">
+          <strong>Drag CSV exports here</strong> or click to browse
+          <div class="hint">Search terms, Keywords, Campaigns, Ads, Change history…</div>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".csv,text/csv">
+        <ul class="upload-list" id="uploadList"></ul>
+        <div class="help-toggle" id="exportHelpToggle">Which reports do I export, and how? ▾</div>
+        <div class="help-panel" id="exportHelpPanel"></div>
+      </div>
+
+      <div class="card">
+        <h2>Account context</h2>
+        <div class="context-field">
+          <label for="ctxBudget">Monthly ad budget ($)</label>
+          <input type="number" id="ctxBudget" value="20000" min="0" step="100">
+        </div>
+        <div class="context-field">
+          <label for="ctxMargin">Gross margin on what you sell (%, optional)</label>
+          <input type="number" id="ctxMargin" placeholder="e.g. 40" min="0" max="100" step="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <div class="card">
+        <h2>2 — Ask a question or state a goal</h2>
+        <div class="goal-chips" id="goalChips"></div>
+        <div class="ask-row">
+          <input type="text" id="askInput" placeholder="e.g. &quot;why did conversions drop&quot; or &quot;where is my $20k going&quot;">
+          <button id="askBtn">Analyze</button>
+        </div>
+        <div class="suggest-row" id="suggestRow"></div>
+      </div>
+
+      <div class="card" id="snapshotCard" style="display:none;">
+        <h2>Account snapshot</h2>
+        <div class="snapshot-kpis" id="snapshotKpis"></div>
+      </div>
+
+      <div class="card">
+        <h2 id="resultsHeader" style="display:none;">Analysis</h2>
+        <div id="results">
+          <div class="empty-state" id="emptyState">
+            <div class="big">📊</div>
+            Upload at least one report, then pick a goal above — or click <b>Full account audit</b> to run everything your data currently supports.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">Ads Analyst — a local, private playbook engine. No data leaves this browser tab. Refreshing the page clears everything.</footer>
+</div>
+
+<script>
+'use strict';
+/* ============================== CSV PARSER ============================== */
+function parseCSV(text){
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = []; let row = [], field = '', inQuotes = false;
+  for (let i=0;i<text.length;i++){
+    const c = text[i];
+    if (inQuotes){
+      if (c === '"'){
+        if (text[i+1] === '"'){ field+='"'; i++; } else { inQuotes=false; }
+      } else field+=c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field=''; }
+      else if (c === '\r'){ /* skip */ }
+      else if (c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=c;
+    }
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* ============================== HEADER ALIASES ============================== */
+const ALIASES = {
+  campaign: ['campaign'],
+  campaignType: ['campaign type'],
+  adGroup: ['ad group'],
+  keyword: ['keyword'],
+  searchTerm: ['search term'],
+  matchType: ['match type'],
+  addedExcluded: ['added/excluded','added / excluded'],
+  status: ['status','campaign status','ad group status','keyword status','ad status'],
+  impressions: ['impr','impressions','impr.'],
+  clicks: ['clicks'],
+  ctr: ['ctr'],
+  avgCpc: ['avg cpc','avg. cpc'],
+  cost: ['cost'],
+  conversions: ['conversions','conv'],
+  costPerConv: ['cost / conv','cost/conv','cost / conv.'],
+  convRate: ['conv rate','conv. rate'],
+  convValue: ['conv value','all conv value','total conv value','conv. value'],
+  qualityScore: ['quality score','qual score','quality score (historical)','quality score (post-auction)'],
+  expCtr: ['exp ctr','expected ctr','exp. ctr','exp ctr (post-auction)','exp ctr status'],
+  adRelevance: ['ad relevance','ad relevance status'],
+  lpExperience: ['landing page exp','landing page experience','landing page exp status','landing pg exper'],
+  budget: ['budget'],
+  searchImprShare: ['search impr share','search impr. share'],
+  searchLostISBudget: ['search lost is (budget)','search lost is budget'],
+  searchLostISRank: ['search lost is (rank)','search lost is rank'],
+  adStrength: ['ad strength'],
+  device: ['device'],
+  dayOfWeek: ['day of week'],
+  date: ['day','date'],
+  hourOfDay: ['hour of day'],
+  assetGroup: ['asset group'],
+  changeDateTime: ['date & time','change date time','date time'],
+  changedBy: ['changed by'],
+  changeType: ['change','change type'],
+  biddingStrategy: ['bid strategy type','bidding strategy type','bid strategy']
+};
+const ALL_ALIAS_STRINGS = new Set(Object.values(ALIASES).flat());
+
+const CURRENCY_CODE_SUFFIXES = new Set(['usd','eur','gbp','cad','aud','jpy','inr','chf','sek','nok','dkk','nzd','mxn','brl','zar','sgd','hkd']);
+function normHeader(h){
+  return String(h||'')
+    .replace(/\u00A0/g,' ')
+    .trim().toLowerCase()
+    .replace(/\./g,'')
+    .replace(/\s+/g,' ')
+    .replace(/\s*\(([a-z]{2,4})\)\s*$/, (m,code) => CURRENCY_CODE_SUFFIXES.has(code) ? '' : m)
+    .trim();
+}
+
+function buildCanonicalMap(headerRow){
+  const map = {}; const extra = {};
+  headerRow.forEach((raw, idx) => {
+    const norm = normHeader(raw);
+    let m = norm.match(/^headline (\d+)$/);
+    if (m){ extra.headlines = extra.headlines || {}; extra.headlines[m[1]] = idx; return; }
+    m = norm.match(/^description (\d+)$/);
+    if (m){ extra.descriptions = extra.descriptions || {}; extra.descriptions[m[1]] = idx; return; }
+    for (const [canon, aliases] of Object.entries(ALIASES)){
+      if (aliases.includes(norm) && map[canon] === undefined){ map[canon] = idx; return; }
+    }
+  });
+  return { map, extra };
+}
+
+/* ============================== VALUE PARSING ============================== */
+const CATEGORICAL_RANK_FIELDS = new Set(['expCtr','adRelevance','lpExperience']);
+const CATEGORICAL_RANK_MAP = { 'below average':1, 'average':2, 'above average':3 };
+const PERCENT_FIELDS = new Set(['ctr','convRate','searchImprShare','searchLostISBudget','searchLostISRank']);
+const NUMERIC_FIELDS = new Set(['avgCpc','cost','costPerConv','convValue','budget','impressions','clicks','conversions','qualityScore','hourOfDay']);
+
+function parseValue(canon, raw){
+  if (raw === undefined || raw === null) return null;
+  const s = String(raw).trim();
+  if (s === '' || s === '--' || s.toLowerCase() === 'n/a') return null;
+  if (CATEGORICAL_RANK_FIELDS.has(canon)){
+    return { label: s, rank: CATEGORICAL_RANK_MAP[s.toLowerCase()] ?? null };
+  }
+  if (PERCENT_FIELDS.has(canon) || NUMERIC_FIELDS.has(canon)){
+    const cleaned = s.replace(/[^0-9.\-]/g,'');
+    if (cleaned === '' || cleaned === '-' || cleaned === '.') return null;
+    const n = parseFloat(cleaned);
+    if (isNaN(n)) return null;
+    return PERCENT_FIELDS.has(canon) ? n/100 : n;
+  }
+  return s;
+}
+
+/* ============================== REPORT PARSING ============================== */
+function parseReportText(filename, text){
+  const rawRows = parseCSV(text);
+  let bestIdx = -1, bestScore = 0;
+  for (let i=0;i<Math.min(rawRows.length, 15); i++){
+    const row = rawRows[i];
+    if (!row || row.length < 2) continue;
+    let score = 0;
+    row.forEach(cell => {
+      const norm = normHeader(cell);
+      if (ALL_ALIAS_STRINGS.has(norm) || /^headline \d+$/.test(norm) || /^description \d+$/.test(norm)) score++;
+    });
+    if (score > bestScore){ bestScore = score; bestIdx = i; }
+  }
+  if (bestIdx === -1 || bestScore < 2){
+    return { error: "Couldn't find a recognizable header row in this file. Make sure it's a standard Google Ads CSV export (not a PDF or a re-saved spreadsheet)." };
+  }
+  const headerRow = rawRows[bestIdx];
+  const { map, extra } = buildCanonicalMap(headerRow);
+  if (Object.keys(map).length === 0 && !extra.headlines){
+    return { error: "Recognized a table but none of the columns matched known Google Ads fields." };
+  }
+  const dataRows = [];
+  for (let i=bestIdx+1; i<rawRows.length; i++){
+    const row = rawRows[i];
+    if (!row || row.every(c => String(c).trim() === '')) continue;
+    const firstCell = String(row[0]||'').trim().toLowerCase();
+    if (firstCell.startsWith('total:') || firstCell === 'total') continue;
+    if (row.length < 2) continue;
+    dataRows.push(row);
+  }
+  const rows = dataRows.map(row => {
+    const rec = {};
+    for (const [canon, idx] of Object.entries(map)) rec[canon] = parseValue(canon, row[idx]);
+    if (extra.headlines) rec.headlines = Object.values(extra.headlines).map(idx => row[idx]).filter(Boolean);
+    if (extra.descriptions) rec.descriptions = Object.values(extra.descriptions).map(idx => row[idx]).filter(Boolean);
+    return rec;
+  });
+  const canonFields = Object.keys(map);
+  if (extra.headlines) canonFields.push('headlines');
+  if (extra.descriptions) canonFields.push('descriptions');
+  const type = detectReportType(new Set(canonFields), extra);
+  return { filename, type, canonFields, rows, rowCount: rows.length };
+}
+
+function detectReportType(fields, extra){
+  const has = f => fields.has(f);
+  if (has('searchTerm')) return 'searchTerms';
+  if (has('assetGroup')) return 'assetGroups';
+  if (has('changeDateTime') || has('changedBy')) return 'changeHistory';
+  if (has('keyword') && (has('qualityScore') || has('expCtr') || has('matchType'))) return 'keywords';
+  if (has('adStrength') || (extra && extra.headlines)) return 'ads';
+  if (has('campaign') && has('budget') && has('searchImprShare')) return 'campaigns';
+  if (has('campaign') && has('device')) return 'campaignsByDevice';
+  if (has('campaign') && has('date')) return 'campaignsByDate';
+  if (has('campaign')) return 'campaignsGeneric';
+  return 'unknown';
+}
+
+const REPORT_TYPE_LABELS = {
+  searchTerms:'Search Terms', keywords:'Keywords', campaigns:'Campaigns (+competitive metrics)',
+  campaignsGeneric:'Campaigns', campaignsByDevice:'Campaigns by Device', campaignsByDate:'Campaigns by Day',
+  ads:'Ads (RSA)', assetGroups:'Asset Groups (PMax)', changeHistory:'Change History', unknown:'Unrecognized'
+};
+
+/* ============================== FORMATTERS ============================== */
+const fmtCurrency = n => n==null ? '—' : '$' + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtCurrency0 = n => n==null ? '—' : '$' + Math.round(n).toLocaleString();
+const fmtInt = n => n==null ? '—' : Math.round(n).toLocaleString();
+const fmtPct = (n,d=1) => n==null ? '—' : (n*100).toFixed(d) + '%';
+const fmtNum = (n,d=2) => n==null ? '—' : n.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const sum = (arr,fn) => arr.reduce((a,r) => a + (fn(r) ?? 0), 0);
+const catRank = v => v && typeof v === 'object' ? v.rank : null;
+const catLabel = v => v && typeof v === 'object' ? v.label : (v ?? '—');
+
+/* ============================== APP STATE ============================== */
+const state = { uploads: [], errors: [] };
+
+function reportsMatchingFields(fields, allowedTypes){
+  return state.uploads.filter(u =>
+    fields.every(f => u.canonFields.includes(f)) &&
+    (!allowedTypes || allowedTypes.includes(u.type))
+  );
+}
+function mergedRowsForFields(fields, allowedTypes){
+  const matches = reportsMatchingFields(fields, allowedTypes);
+  return { rows: matches.flatMap(m => m.rows), sources: matches.map(m => m.filename) };
+}
+function anyFieldPresent(field){
+  return state.uploads.some(u => u.canonFields.includes(field));
+}
+
+/* ============================== TABLE RENDERING ============================== */
+function renderTable(rows, columns, opts){
+  opts = opts || {};
+  const limit = opts.limit || 50;
+  const shown = rows.slice(0, limit);
+  let html = '<div class="table-scroll"><table class="data"><thead><tr>';
+  columns.forEach(c => html += `<th>${escapeHtml(c.label)}</th>`);
+  html += '</tr></thead><tbody>';
+  shown.forEach(r => {
+    html += '<tr>';
+    columns.forEach(c => {
+      const raw = typeof c.key === 'function' ? c.key(r) : r[c.key];
+      const val = c.format ? c.format(raw, r) : escapeHtml(raw);
+      html += `<td>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  if (rows.length > limit){
+    html += `<div class="table-actions"><span style="font-size:11.5px;color:var(--muted);margin-right:auto;">Showing top ${limit} of ${rows.length.toLocaleString()} rows</span>`;
+    html += `<button class="dl-csv-btn">Download full CSV</button></div>`;
+  }
+  return { html, fullRows: rows, columns };
+}
+
+function wireDownloadButtons(container){
+  container.querySelectorAll('.dl-csv-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const wrap = e.target.closest('.finding') || container;
+      const data = wrap._tableData;
+      if (!data) return;
+      const header = data.columns.map(c => c.label).join(',');
+      const lines = data.fullRows.map(r => data.columns.map(c => {
+        const raw = typeof c.key === 'function' ? c.key(r) : r[c.key];
+        const v = c.csv ? c.csv(raw, r) : (raw==null ? '' : String(raw));
+        return `"${String(v).replace(/"/g,'""')}"`;
+      }).join(','));
+      const blob = new Blob([header + '\n' + lines.join('\n')], {type:'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ads-analyst-export.csv';
+      a.click();
+    });
+  });
+}
+
+/* ============================== PLAYBOOKS ============================== */
+const PLAYBOOKS = [];
+
+/* --- 1. Wasted spend / negative keywords --- */
+PLAYBOOKS.push({
+  id: 'wastedSpend', label: 'Find wasted spend',
+  triggers: ['waste','wasted','negative keyword','irrelevant','wasting money','bad clicks','poor search terms','junk traffic'],
+  requiredFields: ['searchTerm','cost','clicks','conversions'],
+  allowedTypes: ['searchTerms'],
+  reportHint: 'Search terms report',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const totalCost = sum(rows, r => r.cost);
+    const totalConv = sum(rows, r => r.conversions);
+    const zeroConv = rows.filter(r => (r.conversions||0) === 0 && (r.cost||0) > 0);
+    const zeroConvCost = sum(zeroConv, r => r.cost);
+    const wastePct = totalCost ? zeroConvCost/totalCost : 0;
+    const convertingCost = totalCost - zeroConvCost;
+    const avgCPA = totalConv ? convertingCost/totalConv : null;
+
+    // n-gram waste scoring: words that appear heavily in zero-conv spend, rarely in converting spend
+    const wordCost = {}, wordConvCost = {};
+    rows.forEach(r => {
+      const term = (r.searchTerm||'').toLowerCase();
+      const words = term.split(/[^a-z0-9']+/).filter(w => w.length > 2);
+      const isZero = (r.conversions||0) === 0;
+      words.forEach(w => {
+        if (isZero) wordCost[w] = (wordCost[w]||0) + (r.cost||0);
+        else wordConvCost[w] = (wordConvCost[w]||0) + (r.cost||0);
+      });
+    });
+    const candidates = Object.entries(wordCost)
+      .filter(([w,c]) => c >= Math.max(15, totalCost*0.005) && (wordConvCost[w]||0) === 0)
+      .sort((a,b) => b[1]-a[1]).slice(0,20);
+
+    const worst = zeroConv.slice().sort((a,b) => (b.cost||0)-(a.cost||0));
+
+    const findings = [];
+    findings.push({
+      severity: wastePct > 0.15 ? 'high' : (wastePct > 0.05 ? 'medium' : 'low'),
+      title: `${fmtCurrency0(zeroConvCost)} spent on search terms with zero conversions`,
+      detail: `That's ${fmtPct(wastePct,1)} of the ${fmtCurrency0(totalCost)} tracked in this data. ${totalConv ? `Your converting spend implies an average CPA of ${fmtCurrency(avgCPA)}.` : ''}`,
+      table: { rows: worst, columns: [
+        {label:'Search term', key:'searchTerm', format:v=>escapeHtml(v)},
+        {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+        {label:'Ad group', key:'adGroup', format:v=>escapeHtml(v)},
+        {label:'Match type', key:'matchType', format:v=>escapeHtml(v)},
+        {label:'Clicks', key:'clicks', format:fmtInt},
+        {label:'Cost', key:'cost', format:fmtCurrency}
+      ]},
+      recommendations: [
+        'Add the exact worst-offending search terms above as negative keywords at the campaign or ad group level.',
+        candidates.length ? `Consider account-wide negative keyword themes: ${candidates.slice(0,10).map(c=>c[0]).join(', ')}.` : null,
+        'If a term is Broad match and driving irrelevant traffic, tighten to Phrase/Exact rather than pausing the keyword outright.'
+      ].filter(Boolean)
+    });
+
+    if (candidates.length){
+      findings.push({
+        severity: 'medium',
+        title: `${candidates.length} recurring words show up only in non-converting search terms`,
+        detail: `These words appear across multiple zero-conversion queries and never in a converting one — strong negative keyword candidates rather than one-off blocks.`,
+        table: { rows: candidates.map(([w,c])=>({word:w,cost:c})), columns:[
+          {label:'Word', key:'word', format:v=>escapeHtml(v)},
+          {label:'Wasted cost', key:'cost', format:fmtCurrency}
+        ]},
+        recommendations: ['Add these as a shared negative keyword list applied across all Search campaigns, then re-check next month for new patterns.']
+      });
+    }
+
+    return {
+      headline: `Wasted spend audit — ${sources.length} file(s), ${rows.length.toLocaleString()} search terms analyzed`,
+      kpis: [
+        {label:'Total cost', value: fmtCurrency0(totalCost)},
+        {label:'Zero-conv cost', value: fmtCurrency0(zeroConvCost)},
+        {label:'% wasted', value: fmtPct(wastePct,1)},
+        {label:'Avg CPA (converting)', value: fmtCurrency(avgCPA)}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* --- 2. Quality Score health --- */
+PLAYBOOKS.push({
+  id: 'qualityScore', label: 'Diagnose Quality Score / high CPCs',
+  triggers: ['quality score','qs','ad relevance','landing page experience','cpc is high','why is my cpc','expected ctr'],
+  requiredFields: ['keyword','qualityScore','cost','clicks'],
+  allowedTypes: ['keywords'],
+  reportHint: 'Keywords report (with Quality Score columns added)',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const scored = rows.filter(r => r.qualityScore != null);
+    const totalClicks = sum(scored, r => r.clicks) || 1;
+    const weightedQS = sum(scored, r => (r.qualityScore||0) * (r.clicks||0)) / totalClicks;
+    const buckets = {poor:0, avg:0, good:0};
+    let poorCost = 0;
+    scored.forEach(r => {
+      if (r.qualityScore <= 4){ buckets.poor++; poorCost += (r.cost||0); }
+      else if (r.qualityScore <= 6) buckets.avg++;
+      else buckets.good++;
+    });
+    const worst = scored.filter(r => r.qualityScore <= 4).sort((a,b)=>(b.cost||0)-(a.cost||0));
+
+    const componentCounts = {expCtr:0, adRelevance:0, lpExperience:0};
+    worst.forEach(r => {
+      ['expCtr','adRelevance','lpExperience'].forEach(f => {
+        if (catRank(r[f]) === 1) componentCounts[f]++;
+      });
+    });
+    const compLabel = {expCtr:'Expected CTR', adRelevance:'Ad relevance', lpExperience:'Landing page experience'};
+    const worstComponent = Object.entries(componentCounts).sort((a,b)=>b[1]-a[1])[0];
+
+    const findings = [{
+      severity: weightedQS < 5 ? 'high' : (weightedQS < 7 ? 'medium' : 'low'),
+      title: `Click-weighted average Quality Score is ${fmtNum(weightedQS,1)}/10`,
+      detail: `${buckets.poor} keyword(s) score 4 or below and are collectively spending ${fmtCurrency0(poorCost)}. Google's own CPC-vs-QS curve means these keywords are likely paying a meaningful premium versus a QS 7+ keyword in the same auction.${worstComponent && worstComponent[1] > 0 ? ` The most common weak point among them is <b>${compLabel[worstComponent[0]]}</b> (flagged "Below average" on ${worstComponent[1]} of the worst ${worst.length}).` : ''}`,
+      table: { rows: worst, columns: [
+        {label:'Keyword', key:'keyword', format:v=>escapeHtml(v)},
+        {label:'Ad group', key:'adGroup', format:v=>escapeHtml(v)},
+        {label:'QS', key:'qualityScore', format:fmtInt},
+        {label:'Exp. CTR', key:r=>catLabel(r.expCtr), format:v=>escapeHtml(v)},
+        {label:'Ad relevance', key:r=>catLabel(r.adRelevance), format:v=>escapeHtml(v)},
+        {label:'LP experience', key:r=>catLabel(r.lpExperience), format:v=>escapeHtml(v)},
+        {label:'Cost', key:'cost', format:fmtCurrency}
+      ]},
+      recommendations: [
+        worstComponent && worstComponent[0]==='expCtr' && worstComponent[1]>0 ? 'Expected CTR is weak on these — tighten match types and rewrite ad copy to better match these exact queries; expected CTR is query-to-ad-text alignment, not overall account CTR.' : null,
+        worstComponent && worstComponent[0]==='adRelevance' && worstComponent[1]>0 ? 'Ad relevance is weak — these keywords likely sit in an ad group with too broad a theme. Split into tighter, single-theme ad groups so the keyword text can appear in the ad.' : null,
+        worstComponent && worstComponent[0]==='lpExperience' && worstComponent[1]>0 ? 'Landing page experience is weak — check page load speed, mobile usability, and whether the page content actually matches these search terms.' : null,
+        'Prioritize fixes on the highest-cost rows first — QS gains compound because they lower CPC on every future auction, not just this period.'
+      ].filter(Boolean)
+    }];
+
+    return {
+      headline: `Quality Score audit — ${sources.length} file(s), ${scored.length.toLocaleString()} scored keywords`,
+      kpis: [
+        {label:'Weighted avg QS', value: fmtNum(weightedQS,1)},
+        {label:'Poor (≤4)', value: buckets.poor},
+        {label:'Average (5-6)', value: buckets.avg},
+        {label:'Good (7-10)', value: buckets.good}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* --- 3. Budget & impression share --- */
+PLAYBOOKS.push({
+  id: 'budgetIS', label: 'Fix budget allocation',
+  triggers: ['budget','impression share','lost is','losing impression share','underfunded','pacing','where is my money going','20k','allocation'],
+  requiredFields: ['campaign','budget','cost','searchImprShare','searchLostISBudget','searchLostISRank'],
+  allowedTypes: ['campaigns','campaignsByDevice','campaignsByDate'],
+  reportHint: 'Campaigns report (with competitive metrics columns added)',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const byBudget = rows.filter(r => (r.searchLostISBudget||0) > 0.10 && (r.cost||0) > 0)
+      .sort((a,b)=>(b.searchLostISBudget||0)-(a.searchLostISBudget||0));
+    const totalCost = sum(rows, r => r.cost);
+    const inefficient = rows.filter(r => (r.searchLostISBudget||0) <= 0.05 && r.convValue != null && r.cost > 0)
+      .map(r => ({...r, roas: r.cost ? (r.convValue||0)/r.cost : 0}))
+      .sort((a,b)=>a.roas-b.roas);
+
+    const findings = [];
+    if (byBudget.length){
+      const estMissedConv = sum(byBudget, r => {
+        const lost = r.searchLostISBudget||0;
+        return lost < 0.95 ? (r.conversions||0) * (lost/(1-lost)) : 0;
+      });
+      findings.push({
+        severity: 'high',
+        title: `${byBudget.length} campaign(s) are capped by budget, not by competition`,
+        detail: `These are losing impression share purely because the daily budget runs out — Google would show the ads more if funded. Rough estimate: keeping them funded through the full day could unlock roughly <b>+${fmtInt(estMissedConv)} conversions</b> at the current conversion rate (a directional estimate, not a guarantee).`,
+        table: { rows: byBudget, columns: [
+          {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+          {label:'Budget', key:'budget', format:fmtCurrency},
+          {label:'Cost', key:'cost', format:fmtCurrency},
+          {label:'Search IS', key:'searchImprShare', format:fmtPct},
+          {label:'Lost IS (budget)', key:'searchLostISBudget', format:fmtPct},
+          {label:'Conversions', key:'conversions', format:fmtInt}
+        ]},
+        recommendations: [
+          'Fund the budget-constrained campaigns first — this is the highest-leverage lever in the account (more of what already works, not a new bet).',
+          'Pull incremental budget from the low-ROAS campaigns below rather than adding net-new spend, if you want to hold the $' + (ctx.monthlyBudget||20000).toLocaleString() + '/mo total.'
+        ]
+      });
+    }
+    if (inefficient.length){
+      findings.push({
+        severity: 'medium',
+        title: `${inefficient.length} campaign(s) have full impression share but weak ROAS`,
+        detail: `Not budget-constrained, not rank-constrained — they're simply spending inefficiently. These are the best source of budget to shift toward the budget-capped, high-performing campaigns above.`,
+        table: { rows: inefficient, columns: [
+          {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+          {label:'Cost', key:'cost', format:fmtCurrency},
+          {label:'Conv. value', key:'convValue', format:fmtCurrency},
+          {label:'ROAS', key:'roas', format:v=>fmtNum(v,2)+'x'}
+        ]},
+        recommendations: ['Trim budget on the lowest-ROAS rows here and redirect it to the budget-capped campaigns above — same total spend, better mix.']
+      });
+    }
+    if (!findings.length){
+      findings.push({ severity:'info', title:'No major budget/impression-share issues found', detail:'Impression share losses are modest across the board in this data — budget allocation looks reasonably efficient right now.', table:null, recommendations:[] });
+    }
+    return {
+      headline: `Budget & impression share audit — ${sources.length} file(s), ${rows.length} campaigns`,
+      kpis: [
+        {label:'Total cost', value: fmtCurrency0(totalCost)},
+        {label:'Budget-capped', value: byBudget.length},
+        {label:'Full IS, weak ROAS', value: inefficient.length}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* --- 4. ROAS / bidding strategy --- */
+PLAYBOOKS.push({
+  id: 'roasBidding', label: 'Which campaigns actually make money',
+  triggers: ['roas','profit','margin','unprofitable','which campaigns make money','bidding','target cpa','target roas','return on ad spend'],
+  requiredFields: ['campaign','cost','convValue'],
+  allowedTypes: ['campaigns','campaignsGeneric','campaignsByDevice','campaignsByDate'],
+  reportHint: 'Campaigns report (with Conv. value column added)',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const withSpend = rows.filter(r => (r.cost||0) > 0).map(r => ({...r, roas: r.cost ? (r.convValue||0)/r.cost : 0}));
+    const totalCost = sum(withSpend, r => r.cost);
+    const totalValue = sum(withSpend, r => r.convValue);
+    const acctROAS = totalCost ? totalValue/totalCost : 0;
+    const margin = ctx.marginPct ? ctx.marginPct/100 : null;
+    const breakeven = margin ? 1/margin : null;
+    const unprofitable = margin ? withSpend.filter(r => r.roas < breakeven && r.cost > totalCost*0.01) : withSpend.filter(r => r.roas < acctROAS && r.cost > totalCost*0.01);
+    unprofitable.sort((a,b)=>b.cost-a.cost);
+
+    const findings = [{
+      severity: unprofitable.length ? 'high' : 'low',
+      title: margin
+        ? `${unprofitable.length} campaign(s) are running below your ${fmtNum(breakeven,2)}x breakeven ROAS`
+        : `${unprofitable.length} campaign(s) are running below the account average ROAS of ${fmtNum(acctROAS,2)}x`,
+      detail: margin
+        ? `At a ${ctx.marginPct}% gross margin, you need ${fmtNum(breakeven,2)}x ROAS just to break even on ad spend. These campaigns are spending ${fmtCurrency0(sum(unprofitable,r=>r.cost))} combined below that line.`
+        : `Add your gross margin % in the context panel to get a true profit breakeven line instead of just the account average.`,
+      table: { rows: unprofitable, columns: [
+        {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+        {label:'Cost', key:'cost', format:fmtCurrency},
+        {label:'Conv. value', key:'convValue', format:fmtCurrency},
+        {label:'ROAS', key:'roas', format:v=>fmtNum(v,2)+'x'},
+        {label:'Bid strategy', key:'biddingStrategy', format:v=>escapeHtml(v||'—')}
+      ]},
+      recommendations: [
+        'Set (or tighten) a Target ROAS on these campaigns rather than Maximize Clicks/Conversions — that alone often reallocates spend within the campaign toward the higher-value converters.',
+        'If a campaign is structurally below breakeven even with tight bidding, it may be a budget-reallocation candidate, not a bid-tuning one.'
+      ]
+    }];
+
+    return {
+      headline: `ROAS & bidding audit — ${sources.length} file(s), ${withSpend.length} campaigns`,
+      kpis: [
+        {label:'Account ROAS', value: fmtNum(acctROAS,2)+'x'},
+        {label:'Total cost', value: fmtCurrency0(totalCost)},
+        {label:'Total conv. value', value: fmtCurrency0(totalValue)},
+        {label:'Breakeven ROAS', value: breakeven ? fmtNum(breakeven,2)+'x' : 'add margin →'}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* --- 5. Ad copy / RSA health --- */
+PLAYBOOKS.push({
+  id: 'adCopy', label: 'Audit ad copy strength',
+  triggers: ['ad strength','rsa','ad copy','headlines','creative','ads are weak','pinning'],
+  requiredFields: ['adStrength','impressions'],
+  allowedTypes: ['ads'],
+  reportHint: 'Ads report (Ads & assets → Ads)',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const active = rows.filter(r => (r.status||'').toLowerCase() !== 'removed');
+    const byStrength = {};
+    active.forEach(r => { const s = r.adStrength || 'Unknown'; byStrength[s] = (byStrength[s]||0)+1; });
+    const weakLabels = ['Poor','Average'];
+    const weak = active.filter(r => weakLabels.includes(r.adStrength)).sort((a,b)=>(b.impressions||0)-(a.impressions||0));
+    const weakImpr = sum(weak, r => r.impressions);
+    const totalImpr = sum(active, r => r.impressions) || 1;
+
+    const perGroup = {};
+    active.forEach(r => { const k = (r.campaign||'')+'|'+(r.adGroup||''); perGroup[k] = (perGroup[k]||0)+1; });
+    const singleAdGroups = Object.entries(perGroup).filter(([k,c]) => c < 2).length;
+
+    const findings = [{
+      severity: (weakImpr/totalImpr) > 0.3 ? 'high' : 'medium',
+      title: `${weak.length} ad(s) rated Poor/Average are carrying ${fmtPct(weakImpr/totalImpr,0)} of ad impressions`,
+      detail: `Ad Strength is Google's own signal for headline/description diversity and relevance — weak ads here directly cap Quality Score's Ad Relevance component and limit RSA combinations being tested.`,
+      table: { rows: weak, columns: [
+        {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+        {label:'Ad group', key:'adGroup', format:v=>escapeHtml(v)},
+        {label:'Ad strength', key:'adStrength', format:v=>escapeHtml(v)},
+        {label:'Impressions', key:'impressions', format:fmtInt}
+      ]},
+      recommendations: [
+        'Add more distinct headlines (aim for 10-15) and avoid repeating the same phrase across multiple headline slots.',
+        'Work in the top 2-3 keyword themes for the ad group directly into headlines, not just descriptions.',
+        singleAdGroups ? `${singleAdGroups} ad group(s) appear to have only one active ad — add a second RSA so Google can test and so you're not fully exposed if one gets disapproved.` : null
+      ].filter(Boolean)
+    }];
+
+    return {
+      headline: `Ad copy audit — ${sources.length} file(s), ${active.length} active ads`,
+      kpis: Object.entries(byStrength).map(([k,v]) => ({label:k, value:v})),
+      findings, sources
+    };
+  }
+});
+
+/* --- 6. Trend / performance drop diagnosis --- */
+PLAYBOOKS.push({
+  id: 'trendDiagnosis', label: 'Why did performance change',
+  triggers: ['drop','declined','why did','dropped','spike','increase','decrease','last week','went down','went up','this month vs','changed'],
+  requiredFields: ['campaign','date','cost','clicks','conversions'],
+  allowedTypes: ['campaignsByDate'],
+  reportHint: 'Campaigns report segmented by Day',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const parsed = rows.map(r => ({...r, _d: new Date(r.date)})).filter(r => !isNaN(r._d));
+    if (!parsed.length) return { headline:'Trend diagnosis', kpis:[], findings:[{severity:'info',title:'No parseable dates found', detail:'The Day column in this file could not be read as dates.', table:null, recommendations:[]}], sources };
+    parsed.sort((a,b) => a._d - b._d);
+    const minD = parsed[0]._d, maxD = parsed[parsed.length-1]._d;
+    const midpoint = new Date((minD.getTime()+maxD.getTime())/2);
+    const first = parsed.filter(r => r._d < midpoint);
+    const second = parsed.filter(r => r._d >= midpoint);
+
+    function agg(list){
+      const byCampaign = {};
+      list.forEach(r => {
+        const c = r.campaign;
+        byCampaign[c] = byCampaign[c] || {cost:0, clicks:0, conversions:0, impressions:0};
+        byCampaign[c].cost += r.cost||0; byCampaign[c].clicks += r.clicks||0;
+        byCampaign[c].conversions += r.conversions||0; byCampaign[c].impressions += r.impressions||0;
+      });
+      return byCampaign;
+    }
+    const a = agg(first), b = agg(second);
+    const campaigns = new Set([...Object.keys(a), ...Object.keys(b)]);
+    const deltas = [...campaigns].map(c => {
+      const A = a[c] || {cost:0,clicks:0,conversions:0,impressions:0};
+      const B = b[c] || {cost:0,clicks:0,conversions:0,impressions:0};
+      return {
+        campaign: c, costA:A.cost, costB:B.cost, convA:A.conversions, convB:B.conversions,
+        convDelta: B.conversions - A.conversions,
+        ctrA: A.impressions ? A.clicks/A.impressions : null, ctrB: B.impressions ? B.clicks/B.impressions : null,
+        cpcA: A.clicks ? A.cost/A.clicks : null, cpcB: B.clicks ? B.cost/B.clicks : null
+      };
+    }).sort((x,y) => x.convDelta - y.convDelta);
+
+    const decliners = deltas.filter(d => d.convDelta < 0).slice(0,15);
+    const totalConvA = sum(Object.values(a), x=>x.conversions), totalConvB = sum(Object.values(b), x=>x.conversions);
+
+    const findings = [{
+      severity: totalConvB < totalConvA ? 'high' : 'info',
+      title: `Conversions went from ${fmtInt(totalConvA)} to ${fmtInt(totalConvB)} between the two halves of this date range`,
+      detail: `Split at the midpoint of your uploaded range (${minD.toDateString()} → ${maxD.toDateString()}). The campaigns below explain most of the movement — check whether their CTR or CPC moved, which points at creative fatigue/relevance (CTR) vs. rising competition (CPC).`,
+      table: { rows: decliners, columns: [
+        {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+        {label:'Conv. (before)', key:'convA', format:fmtInt},
+        {label:'Conv. (after)', key:'convB', format:fmtInt},
+        {label:'CTR before', key:'ctrA', format:fmtPct},
+        {label:'CTR after', key:'ctrB', format:fmtPct},
+        {label:'CPC before', key:'cpcA', format:fmtCurrency},
+        {label:'CPC after', key:'cpcB', format:fmtCurrency}
+      ]},
+      recommendations: [
+        'If CTR fell and CPC held roughly flat, suspect ad fatigue or a landing page/offer change — refresh creative.',
+        'If CPC rose and CTR held roughly flat, suspect increased auction competition — check Auction Insights for new entrants.',
+        'If both cost and conversions fell together, check for a budget cap or a paused campaign/ad group in Change History.'
+      ]
+    }];
+
+    return {
+      headline: `Trend diagnosis — ${sources.length} file(s), ${parsed.length} daily campaign rows`,
+      kpis: [
+        {label:'Date range', value: minD.toLocaleDateString()+' – '+maxD.toLocaleDateString()},
+        {label:'Conv. (first half)', value: fmtInt(totalConvA)},
+        {label:'Conv. (second half)', value: fmtInt(totalConvB)}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* --- 7. General account health --- */
+PLAYBOOKS.push({
+  id: 'accountHealth', label: 'General account health check',
+  triggers: ['overview','health check','general','audit','how is my account','summary','full audit'],
+  requiredFields: ['campaign','cost'],
+  allowedTypes: ['campaigns','campaignsGeneric','campaignsByDevice','campaignsByDate'],
+  reportHint: 'Campaigns report',
+  run(ctx){
+    const { rows, sources } = mergedRowsForFields(this.requiredFields, this.allowedTypes);
+    const totalCost = sum(rows, r => r.cost);
+    const totalConv = sum(rows, r => r.conversions);
+    const deadWeight = rows.filter(r => (r.cost||0) > Math.max(50, totalCost*0.01) && (r.conversions||0) === 0)
+      .sort((a,b)=>(b.cost||0)-(a.cost||0));
+    const deadCost = sum(deadWeight, r => r.cost);
+    const monthlyBudget = ctx.monthlyBudget || 20000;
+    const rangeCost = totalCost;
+
+    const findings = [];
+    findings.push({
+      severity: 'info',
+      title: `${rows.length} campaigns, ${fmtCurrency0(totalCost)} tracked cost, ${fmtInt(totalConv)} conversions in this data`,
+      detail: `That's roughly ${fmtPct(rangeCost/monthlyBudget,0)} of your stated $${monthlyBudget.toLocaleString()}/mo budget, depending on how many days this export covers.`,
+      table: null, recommendations: []
+    });
+    if (deadWeight.length){
+      findings.push({
+        severity: 'high',
+        title: `${deadWeight.length} campaign(s) spent meaningfully with zero conversions`,
+        detail: `${fmtCurrency0(deadCost)} combined with no tracked conversions in this window. Worth confirming conversion tracking is actually firing before assuming these campaigns don't work.`,
+        table: { rows: deadWeight, columns: [
+          {label:'Campaign', key:'campaign', format:v=>escapeHtml(v)},
+          {label:'Cost', key:'cost', format:fmtCurrency},
+          {label:'Clicks', key:'clicks', format:fmtInt}
+        ]},
+        recommendations: ['Verify conversion tracking on these campaigns first. If tracking is confirmed working, pause or restructure — this is unambiguous budget to reallocate.']
+      });
+    }
+    return {
+      headline: `Account health check — ${sources.length} file(s)`,
+      kpis: [
+        {label:'Campaigns', value: rows.length},
+        {label:'Total cost', value: fmtCurrency0(totalCost)},
+        {label:'Conversions', value: fmtInt(totalConv)},
+        {label:'% of monthly budget', value: fmtPct(rangeCost/monthlyBudget,0)}
+      ],
+      findings, sources
+    };
+  }
+});
+
+/* ============================== EXPORT HELP TEXT ============================== */
+const EXPORT_HELP = {
+  searchTerms: 'Campaigns → Search keywords → <b>Search terms</b> tab. Set your date range, then the download icon (top right) → CSV.',
+  keywords: 'Campaigns → <b>Search keywords</b>. Click <b>Columns → Modify columns → Quality Score</b> and add Quality Score, Expected CTR, Ad relevance, Landing page experience — they are NOT shown by default. Then download as CSV.',
+  campaigns: '<b>Campaigns</b> table view. Click <b>Columns → Modify columns → Competitive metrics</b> and add Search impr. share, Search lost IS (budget), Search lost IS (rank). Also add Conv. value under Attribution if you want ROAS. Then download as CSV.',
+  ads: '<b>Ads & assets → Ads</b>. Ad strength is a default column. Download as CSV.',
+  trend: 'Same as Campaigns, but click <b>Segment → Time → Day</b> first so each row is one campaign on one day.'
+};
+
+/* ============================== UI WIRING ============================== */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const uploadList = document.getElementById('uploadList');
+const goalChipsEl = document.getElementById('goalChips');
+const askInput = document.getElementById('askInput');
+const askBtn = document.getElementById('askBtn');
+const suggestRow = document.getElementById('suggestRow');
+const resultsEl = document.getElementById('results');
+const resultsHeader = document.getElementById('resultsHeader');
+const emptyState = document.getElementById('emptyState');
+const snapshotCard = document.getElementById('snapshotCard');
+const snapshotKpis = document.getElementById('snapshotKpis');
+
+dropzone.addEventListener('click', () => fileInput.click());
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('hover'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('hover'); }));
+dropzone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  [...fileList].forEach(file => {
+    if (!/\.csv$/i.test(file.name) && file.type !== 'text/csv'){
+      addUploadError(file.name, 'Not a CSV file — export as CSV from Google Ads.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = parseReportText(file.name, reader.result);
+      if (result.error){ addUploadError(file.name, result.error); return; }
+      state.uploads.push(result);
+      renderUploads();
+      renderSnapshot();
+      renderGoalChips();
+    };
+    reader.onerror = () => addUploadError(file.name, 'Could not read file.');
+    reader.readAsText(file);
+  });
+}
+
+function addUploadError(filename, msg){
+  state.errors.push({ filename, msg });
+  renderUploads();
+}
+
+function renderUploads(){
+  uploadList.innerHTML = '';
+  state.uploads.forEach((u, idx) => {
+    const li = document.createElement('li');
+    li.className = 'upload-item';
+    const label = REPORT_TYPE_LABELS[u.type] || u.type;
+    li.innerHTML = `<div class="row1">
+        <span class="fname" title="${escapeHtml(u.filename)}">${escapeHtml(u.filename)}</span>
+        <button class="rm" data-idx="${idx}" title="Remove">✕</button>
+      </div>
+      <div class="meta"><span class="type-badge ${u.type==='unknown'?'unknown':''}">${escapeHtml(label)}</span> &nbsp;${u.rowCount.toLocaleString()} rows</div>`;
+    uploadList.appendChild(li);
+  });
+  state.errors.forEach((err, idx) => {
+    const li = document.createElement('li');
+    li.className = 'upload-item';
+    li.innerHTML = `<div class="row1">
+        <span class="fname" title="${escapeHtml(err.filename)}">${escapeHtml(err.filename)}</span>
+        <span class="type-badge unknown">Error</span>
+        <button class="rm" data-errIdx="${idx}" title="Dismiss">✕</button>
+      </div>
+      <div class="meta">${escapeHtml(err.msg)}</div>`;
+    uploadList.appendChild(li);
+  });
+  uploadList.querySelectorAll('button.rm[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.uploads.splice(parseInt(btn.dataset.idx,10), 1);
+      renderUploads(); renderSnapshot(); renderGoalChips();
+    });
+  });
+  uploadList.querySelectorAll('button.rm[data-errIdx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.errors.splice(parseInt(btn.dataset.errIdx,10), 1);
+      renderUploads();
+    });
+  });
+}
+
+function getContext(){
+  return {
+    monthlyBudget: parseFloat(document.getElementById('ctxBudget').value) || 20000,
+    marginPct: parseFloat(document.getElementById('ctxMargin').value) || null
+  };
+}
+
+function renderSnapshot(){
+  const costRows = mergedRowsForFields(['campaign','cost']);
+  if (!costRows.rows.length){ snapshotCard.style.display = 'none'; return; }
+  const rows = costRows.rows;
+  const totalCost = sum(rows, r => r.cost);
+  const totalConv = sum(rows, r => r.conversions);
+  const totalClicks = sum(rows, r => r.clicks);
+  const totalValue = anyFieldPresent('convValue') ? sum(rows, r => r.convValue) : null;
+  const kpis = [
+    {label:'Tracked cost', value: fmtCurrency0(totalCost)},
+    {label:'Clicks', value: fmtInt(totalClicks)},
+    {label:'Conversions', value: fmtInt(totalConv)},
+    {label:'Avg CPA', value: totalConv ? fmtCurrency(totalCost/totalConv) : '—'}
+  ];
+  if (totalValue != null) kpis.push({label:'ROAS', value: fmtNum(totalCost ? totalValue/totalCost : 0,2)+'x'});
+  snapshotKpis.innerHTML = kpis.map(k => `<div class="kpi"><div class="val">${escapeHtml(String(k.value))}</div><div class="lbl">${escapeHtml(k.label)}</div></div>`).join('');
+  snapshotCard.style.display = '';
+}
+
+function renderGoalChips(){
+  goalChipsEl.innerHTML = '';
+  PLAYBOOKS.forEach(pb => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = pb.label;
+    chip.addEventListener('click', () => runPlaybook(pb));
+    goalChipsEl.appendChild(chip);
+  });
+  const auditChip = document.createElement('div');
+  auditChip.className = 'chip';
+  auditChip.style.fontWeight = '700';
+  auditChip.textContent = '🔎 Full account audit';
+  auditChip.addEventListener('click', runFullAudit);
+  goalChipsEl.appendChild(auditChip);
+}
+
+function matchGoal(text){
+  const t = text.toLowerCase();
+  const scored = PLAYBOOKS.map(pb => {
+    const score = pb.triggers.reduce((s,kw) => s + (t.includes(kw) ? 1 : 0), 0);
+    return { pb, score };
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score);
+  return scored.map(x => x.pb);
+}
+
+askBtn.addEventListener('click', () => {
+  const matches = matchGoal(askInput.value);
+  if (!matches.length){
+    suggestRow.style.display = 'block';
+    suggestRow.innerHTML = "Couldn't match that to a playbook yet. Try one of: " +
+      PLAYBOOKS.map(pb => `<span class="chip" data-id="${pb.id}">${escapeHtml(pb.label)}</span>`).join(' ');
+    suggestRow.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => runPlaybook(PLAYBOOKS.find(p=>p.id===c.dataset.id))));
+    return;
+  }
+  suggestRow.style.display = 'none';
+  runPlaybook(matches[0]);
+});
+askInput.addEventListener('keydown', e => { if (e.key === 'Enter') askBtn.click(); });
+
+function setActiveChip(label){
+  [...goalChipsEl.children].forEach(c => c.classList.toggle('active', c.textContent === label));
+}
+
+function runPlaybook(pb){
+  if (!pb) return;
+  setActiveChip(pb.label);
+  const ctx = getContext();
+  const satisfied = reportsMatchingFields(pb.requiredFields, pb.allowedTypes).length > 0;
+  resultsHeader.style.display = '';
+  emptyState.style.display = 'none';
+  if (!satisfied){
+    resultsEl.innerHTML = `<div class="missing-box">
+      <b>Not enough data yet for "${escapeHtml(pb.label)}".</b><br>
+      This needs a report containing: <code>${pb.requiredFields.join('</code>, <code>')}</code>.<br><br>
+      Export it from Google Ads: <b>${pb.reportHint}</b>.
+      <ul><li>Go to the report in the left nav</li><li>Set your date range</li><li>Add any missing columns via the <b>Columns</b> button if noted above</li><li>Click the download icon → CSV</li><li>Drop the file in on the left</li></ul>
+    </div>`;
+    return;
+  }
+  const result = pb.run(ctx);
+  resultsEl.innerHTML = '';
+  renderResult(result);
+}
+
+function runFullAudit(){
+  setActiveChip('🔎 Full account audit');
+  const ctx = getContext();
+  resultsHeader.style.display = '';
+  emptyState.style.display = 'none';
+  const runnable = PLAYBOOKS.filter(pb => reportsMatchingFields(pb.requiredFields, pb.allowedTypes).length > 0);
+  const blocked = PLAYBOOKS.filter(pb => reportsMatchingFields(pb.requiredFields, pb.allowedTypes).length === 0);
+  if (!runnable.length){
+    resultsEl.innerHTML = `<div class="missing-box"><b>No reports uploaded yet.</b> Drop in at least a Campaigns or Search terms CSV to get started.</div>`;
+    return;
+  }
+  resultsEl.innerHTML = '';
+  runnable.forEach(pb => renderResult(pb.run(ctx)));
+  if (blocked.length){
+    const div = document.createElement('div');
+    div.className = 'more-available';
+    div.innerHTML = `<details><summary>${blocked.length} more analysis type(s) available if you upload more reports</summary>` +
+      blocked.map(pb => `<div class="req-item"><b>${escapeHtml(pb.label)}</b><br>Needs: <code>${pb.requiredFields.join('</code>, <code>')}</code> — export the <b>${escapeHtml(pb.reportHint)}</b>.</div>`).join('') +
+      `</details>`;
+    resultsEl.appendChild(div);
+  }
+}
+
+function renderResult(result){
+  const section = document.createElement('div');
+  section.innerHTML = `<div class="result-headline">${escapeHtml(result.headline)}</div>`;
+  if (result.kpis && result.kpis.length){
+    const kpiRow = document.createElement('div');
+    kpiRow.className = 'snapshot-kpis';
+    kpiRow.style.marginBottom = '16px';
+    kpiRow.innerHTML = result.kpis.map(k => `<div class="kpi"><div class="val">${escapeHtml(String(k.value))}</div><div class="lbl">${escapeHtml(k.label)}</div></div>`).join('');
+    section.appendChild(kpiRow);
+  }
+  (result.findings||[]).forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'finding ' + f.severity;
+    let html = `<div class="sev">${f.severity}</div><div class="ftitle">${escapeHtml(f.title)}</div><div class="fdetail">${f.detail}</div>`;
+    if (f.table && f.table.rows.length){
+      const t = renderTable(f.table.rows, f.table.columns);
+      html += t.html;
+      div._tableData = { fullRows: t.fullRows, columns: t.columns };
+    }
+    if (f.recommendations && f.recommendations.length){
+      html += `<div class="recs"><b>Recommended actions</b><ul>${f.recommendations.map(r=>`<li>${escapeHtml(r)}</li>`).join('')}</ul></div>`;
+    }
+    div.innerHTML = html;
+    section.appendChild(div);
+    wireDownloadButtons(div);
+  });
+  if (result.sources && result.sources.length){
+    const src = document.createElement('div');
+    src.className = 'sources-line';
+    src.textContent = 'Source file(s): ' + result.sources.join(', ');
+    section.appendChild(src);
+  }
+  resultsEl.appendChild(section);
+}
+
+/* Export help panel */
+const exportHelpToggle = document.getElementById('exportHelpToggle');
+const exportHelpPanel = document.getElementById('exportHelpPanel');
+exportHelpPanel.innerHTML = `<dl>
+  <dt>Search Terms</dt><dd>${EXPORT_HELP.searchTerms}</dd>
+  <dt>Keywords (for Quality Score)</dt><dd>${EXPORT_HELP.keywords}</dd>
+  <dt>Campaigns (for budget / impression share / ROAS)</dt><dd>${EXPORT_HELP.campaigns}</dd>
+  <dt>Ads</dt><dd>${EXPORT_HELP.ads}</dd>
+  <dt>Trend / day-by-day</dt><dd>${EXPORT_HELP.trend}</dd>
+</dl>`;
+exportHelpToggle.addEventListener('click', () => {
+  exportHelpPanel.classList.toggle('open');
+  exportHelpToggle.textContent = exportHelpPanel.classList.contains('open')
+    ? 'Which reports do I export, and how? ▴' : 'Which reports do I export, and how? ▾';
+});
+
+renderGoalChips();
+</script>
+</body>
+</html>
